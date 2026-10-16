@@ -12,7 +12,7 @@ Critère de réussite : `GET /` renvoie `HTTP 200` et le corps `OK defi-NN`.
 | Défi | Titre | Couche en cause | État |
 |---|---|---|---|
 | [01](defis/defi-01.md) | Personne ne répond | Processus non lancé | ✅ |
-| [02](defis/defi-02.md) | La mauvaise porte | — | ⏳ |
+| [02](defis/defi-02.md) | La mauvaise porte | Mauvais port (client) | ✅ |
 | [03](defis/defi-03.md) | Adresse inconnue | — | ⏳ |
 | [04](defis/defi-04.md) | Ça marche seulement chez lui | — | ⏳ |
 | [05](defis/defi-05.md) | Ça répond… mais en erreur | — | ⏳ |
