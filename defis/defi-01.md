@@ -1,41 +1,10 @@
-# Rapport — Laboratoire « Pourquoi ça ne répond pas ? »
+[← Sommaire](../README.md) · **Défi 1** · [Défi 2 →](defi-02.md)
 
-**Auteur :** Victor Metral
-**Formation :** Ada Tech School — Spé DevOps / Opérations et Sécurité, Bloc 2
-**Formateur :** Cyril
-**Laboratoire :** [cbldev/defi-reseau](https://github.com/cbldev/defi-reseau)
-
----
-
-## Contexte
-
-Six services Docker sont volontairement en panne sur un réseau privé (`atelier`).
-Pour chacun, la démarche suivie est la même :
-
-> **symptôme → hypothèse → preuve → cause → correction → vérification**
-
-- **Client** : conteneur `poste` (`docker compose exec poste bash`).
-- **Hôte** : terminal du Mac, pour les logs, l'examen des cibles et les corrections.
-- **Critère de réussite** : `GET /` renvoie `HTTP 200` et le corps `OK defi-NN`.
-
-## Environnement
-
-| Élément | Valeur |
-|---|---|
-| Machine | MacBook Air, macOS, terminal zsh |
-| Docker | Docker Desktop, plugin `docker compose` v2+ |
-| Lancement | `cp .env.example .env` → `docker compose build poste` → `docker compose up -d --no-build` |
-| État initial | 7 conteneurs `Up`, aucun port publié vers l'hôte (réseau `internal: true`) |
-
-**Observation préalable :** lancées depuis le Mac, les commandes `ping defi-01` et `curl http://defi-01:8000/` échouent avec `Could not resolve host`.
-Les noms `defi-01`, `poste`… ne sont connus que du **DNS interne de Docker** (`127.0.0.11`), à l'intérieur du réseau `atelier`.
-Tous les tests client se font donc depuis `poste`.
-
----
-
-## Défi 1 — Personne ne répond ✅
+# Défi 1 — Personne ne répond ✅
 
 **Mission :** obtenir une réponse de `http://defi-01:8000/`. Un collègue affirme que « la machine est bien allumée ».
+
+## Compte rendu
 
 | Élément | Réponse |
 |---|---|
@@ -46,50 +15,45 @@ Tous les tests client se font donc depuis `poste`.
 | **Correction** | `DEFI_01_ACTIF=1` dans `.env`, puis `docker compose up -d defi-01` (recréation du conteneur). |
 | **Vérification** | `curl http://defi-01:8000/` → `HTTP/1.0 200 OK`, corps `OK defi-01`, en-tête `Server: BaseHTTP/0.6 Python/3.13.16`. |
 
-### Fausse piste rencontrée
+## Fausses pistes rencontrées
 
-Après modification du `.env`, un `docker compose restart defi-01` **ne suffit pas** :
-les logs affichent toujours « serveur HTTP désactivé » et `printenv LAB_ACTIVE` renvoie encore `0`.
+**1. Une ligne `LISTEN` qui n'est pas l'application.**
+`ss -lnt` affiche une écoute sur `127.0.0.11:44855`. C'est le résolveur DNS que Docker installe dans chaque conteneur, pas le serveur web : aucun processus correspondant dans `ps`, et les logs disent « désactivé ».
+→ Ne jamais conclure sur une seule commande : croiser ports, processus et logs.
 
+**2. `restart` ne relit pas le `.env`.**
+Après modification du `.env`, `docker compose restart defi-01` laisse les logs inchangés et `printenv LAB_ACTIVE` renvoie encore `0`.
 Les variables d'environnement sont fixées **à la création** du conteneur.
-`restart` relance le même conteneur sans relire le `.env` ; `up -d` compare la configuration et **recrée** le conteneur si elle a changé.
 
 | Commande | Relit le `.env` ? |
 |---|---|
-| `docker compose restart <service>` | Non |
-| `docker compose up -d <service>` | Oui, recrée si la configuration a changé |
-| `docker compose up -d --force-recreate <service>` | Oui, recrée dans tous les cas |
+| `docker compose restart <service>` | Non : relance le même conteneur |
+| `docker compose up -d <service>` | Oui : recrée le conteneur si la configuration a changé |
+| `docker compose up -d --force-recreate <service>` | Oui : recrée dans tous les cas |
 
-### Ce que j'en retiens
+## 📂 Dans le dépôt
 
-- Un **ping réussi** prouve que la machine est joignable, pas qu'une application répond.
+Le trajet de la valeur, du fichier de configuration jusqu'au comportement observé :
+
+| Étape | Fichier | Ligne | Ce qui s'y passe |
+|---|---|---|---|
+| 1 | `.env` (copie de `.env.example`) | 2 | `DEFI_01_ACTIF=0` |
+| 2 | `docker-compose.yml` | 31 | `LAB_ACTIVE: ${DEFI_01_ACTIF:-0}` : Compose injecte la valeur dans le conteneur (0 par défaut si absente) |
+| 3 | `app/start.sh` | 13–15 | Si `LAB_ACTIVE` vaut `0` : affiche « serveur HTTP désactivé » puis `exec sleep infinity` |
+| 4 | `app/start.sh` | 17 | Ligne jamais atteinte : `exec python3 /opt/lab/server.py` |
+| 5 | `app/server.py` | — | Jamais lancé, d'où l'absence de processus Python et de port 8000 |
+
+Commandes pour le vérifier soi-même :
+
+```bash
+grep -n "DEFI_01" .env                       # étape 1
+grep -n "LAB_ACTIVE" docker-compose.yml      # étape 2
+sed -n '12,18p' app/start.sh                 # étapes 3 et 4
+docker compose exec defi-01 printenv LAB_ACTIVE   # valeur réellement reçue par le conteneur
+```
+
+## Ce que j'en retiens
+
+- Un **ping réussi** prouve que la machine est joignable, pas que l'application marche.
 - `Connection refused` immédiat = machine joignable, mais **rien n'écoute** sur ce port (≠ `timeout`, qui évoque plutôt un pare-feu).
-- Ne jamais conclure sur une seule commande : **croiser** logs, processus (`ps`) et ports (`ss`).
-
----
-
-## Défi 2 — La mauvaise porte
-
-*À venir.*
-
-## Défi 3 — Adresse inconnue
-
-*À venir.*
-
-## Défi 4 — Ça marche seulement chez lui
-
-*À venir.*
-
-## Défi 5 — Ça répond… mais en erreur
-
-*À venir.*
-
-## Défi 6 — HTTPS refuse la connexion
-
-*À venir.*
-
----
-
-## Synthèse
-
-*À rédiger après les six défis : ce que prouvent, et ne prouvent pas, une réponse au ping, une connexion TCP et une réponse HTTP.*
+- Une variable modifiée dans `.env` impose de **recréer** le conteneur, pas seulement de le redémarrer.
