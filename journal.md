@@ -1,1 +1,2 @@
 - 2026-10-16 : rapport découpé (README + defis/), trajet du défi 1 dans le dépôt
+- 2026-10-16 : rapport découpé, défi 2 résolu (mauvais port, correction côté client)
