@@ -1,0 +1,1 @@
+- 2026-10-16 : rapport découpé (README + defis/), trajet du défi 1 dans le dépôt
