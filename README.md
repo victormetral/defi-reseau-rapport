@@ -14,7 +14,7 @@ Critère de réussite : `GET /` renvoie `HTTP 200` et le corps `OK defi-NN`.
 | [01](defis/defi-01.md) | Personne ne répond | Processus non lancé | ✅ |
 | [02](defis/defi-02.md) | La mauvaise porte | Mauvais port (client) | ✅ |
 | [03](defis/defi-03.md) | Adresse inconnue | Nom DNS erroné (client) | ✅ |
-| [04](defis/defi-04.md) | Ça marche seulement chez lui | — | ⏳ |
+| [04](defis/defi-04.md) | Ça marche seulement chez lui | Écoute sur 127.0.0.1 (serveur) | ✅ |
 | [05](defis/defi-05.md) | Ça répond… mais en erreur | — | ⏳ |
 | [06](defis/defi-06.md) | HTTPS refuse la connexion | — | ⏳ |
 
