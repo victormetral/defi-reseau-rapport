@@ -1,2 +1,3 @@
 - 2026-10-16 : rapport découpé (README + defis/), trajet du défi 1 dans le dépôt
 - 2026-10-16 : rapport découpé, défi 2 résolu (mauvais port, correction côté client)
+- 2026-10-18 : défis 3 (DNS) et 4 (écoute 127.0.0.1) résolus
